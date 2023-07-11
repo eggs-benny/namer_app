@@ -17,7 +17,8 @@ class MyApp extends StatelessWidget {
         title: 'Namer App',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepOrange),
+          colorScheme:
+              ColorScheme.fromSeed(seedColor: Colors.lightBlue.shade50),
         ),
         home: MyHomePage(),
       ),
@@ -31,24 +32,87 @@ class MyAppState extends ChangeNotifier {
     current = WordPair.random();
     notifyListeners();
   }
+
+  var favourites = <WordPair>[];
+
+  void toggleFavorite() {
+    if (favourites.contains(current)) {
+      favourites.remove(current);
+    } else {
+      favourites.add(current);
+    }
+    print(favourites);
+    notifyListeners();
+  }
 }
 
 class MyHomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    var pair = appState.current;
+
+    IconData icon;
+    if (appState.favourites.contains(pair)) {
+      icon = Icons.favorite;
+    } else {
+      icon = Icons.favorite_border;
+    }
 
     return Scaffold(
-      body: Column(
-        children: [
-          Text('Some random ideas:'),
-          Text(appState.current.asSnakeCase),
-          ElevatedButton(
-              onPressed: () {
-                appState.getNext();
-              },
-              child: Text('Next')),
-        ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            BigCard(pair: pair),
+            SizedBox(height: 10),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ElevatedButton.icon(
+                    onPressed: () {
+                      appState.toggleFavorite();
+                    },
+                    icon: Icon(icon),
+                    label: Text('like')),
+                ElevatedButton(
+                    onPressed: () {
+                      appState.getNext();
+                    },
+                    child: Text('Next')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class BigCard extends StatelessWidget {
+  const BigCard({
+    super.key,
+    required this.pair,
+  });
+
+  final WordPair pair;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final style = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.onSurface,
+    );
+    return Card(
+      color: theme.colorScheme.primary,
+      elevation: 10,
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Text(
+          pair.asPascalCase,
+          style: style,
+          semanticsLabel: "${pair.first} ${pair.second}",
+        ),
       ),
     );
   }
